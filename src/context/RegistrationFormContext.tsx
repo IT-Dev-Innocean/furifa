@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getRegistrationValidationErrors } from '@/lib/validateRegistrationForm';
 import type {
   ConfirmationSnapshot,
   FurifaRegistrationForm,
@@ -53,26 +54,6 @@ const RegistrationFormContext = createContext<
   RegistrationFormContextValue | undefined
 >(undefined);
 
-function validateForm(form: FurifaRegistrationForm): string | null {
-  if (!form.fullName.trim()) return 'Nama lengkap wajib diisi.';
-  if (!form.phone.trim() || form.phone.length < 10)
-    return 'Nomor telepon wajib diisi (min. 10 digit).';
-  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-    return 'Email wajib diisi dengan format yang benar.';
-  if (!form.dateOfBirth) return 'Tanggal lahir wajib diisi.';
-  if (!form.gender) return 'Jenis kelamin wajib dipilih.';
-  if (!form.provinceId) return 'Provinsi wajib dipilih.';
-  if (!form.cityId) return 'Kota/Kabupaten wajib dipilih.';
-  if (!form.fullAddress.trim()) return 'Alamat lengkap wajib diisi.';
-  if (!form.petType) return 'Jenis hewan peliharaan wajib dipilih.';
-  if (!form.petGender) return 'Gender hewan peliharaan wajib dipilih.';
-  if (!form.petName.trim()) return 'Nama hewan peliharaan wajib diisi.';
-  if (!form.petAgeYears.trim()) return 'Usia hewan peliharaan wajib diisi.';
-  if (!form.agreedToPrivacy || !form.agreedToAdminOnly)
-    return 'Anda harus menyetujui pernyataan privasi.';
-  return null;
-}
-
 const PET_TYPE_LABELS: Record<string, string> = {
   kucing: 'Kucing',
   anjing: 'Anjing',
@@ -110,9 +91,7 @@ export function RegistrationFormProvider({
 
   const submit = useCallback(async () => {
     setSubmitError(null);
-    const validationError = validateForm(form);
-    if (validationError) {
-      setSubmitError(validationError);
+    if (getRegistrationValidationErrors(form).length > 0) {
       return;
     }
 

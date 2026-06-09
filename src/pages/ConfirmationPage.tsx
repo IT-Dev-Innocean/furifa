@@ -55,11 +55,12 @@ function ConfirmationContent() {
 
           <FadeIn delay={100}>
             <div className='rounded-md border border-neutral-200/90 bg-white p-5 shadow-sm sm:p-6'>
-              <h1 className='mb-2 text-center text-lg font-bold text-rc-red'>
+              <h1 className='mb-2 text-center text-xl font-bold text-rc-red tracking-wider'>
                 FURIFA 2026
               </h1>
-              <p className='mb-6 text-center text-sm text-neutral-600'>
-                Terima kasih! Data registrasi Anda telah tercatat.
+              <p className='mb-10 font-medium text-center text-sm text-neutral-800 max-w-xs mx-auto'>
+                Terima Kasih telah melengkapi data diri Anda di Royal Canin
+                Club.
               </p>
 
               <dl className='space-y-3 text-sm'>
@@ -101,12 +102,6 @@ function ConfirmationContent() {
                 </div>
               </dl>
             </div>
-
-            {/* <div className='flex justify-center pt-6'>
-              <Button asChild variant='outline' size='lg'>
-                <Link to='/'>Kembali ke formulir</Link>
-              </Button>
-            </div> */}
           </FadeIn>
         </div>
       </main>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { useRegistrationForm } from '@/context/RegistrationFormContext';
 import { useProvinces, useRegencies } from '@/hooks/useWilayah';
@@ -8,11 +9,18 @@ import {
   type RegistrationStyledOption,
 } from '@/components/registration/RegistrationStyledSelect';
 import { RegistrationFooter } from '@/components/registration/RegistrationFooter';
+import { ValidationAlertModal } from '@/components/registration/ValidationAlertModal';
+import { BirthDatePicker } from '@/components/registration/BirthDatePicker';
 import { FadeIn } from '@/components/magicui/fade-in';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import {
+  getRegistrationValidationErrors,
+  scrollToRegistrationField,
+  type RegistrationValidationError,
+} from '@/lib/validateRegistrationForm';
 import type { SocialMediaOption } from '@/types/registration';
 
 const GENDER_OPTIONS: RegistrationStyledOption[] = [
@@ -44,6 +52,26 @@ const PET_GENDER_OPTIONS: RegistrationStyledOption[] = [
 export function RegistrationFormView() {
   const { form, setField, setForm, submit, submitting, submitError } =
     useRegistrationForm();
+  const [validationErrors, setValidationErrors] = useState<
+    RegistrationValidationError[]
+  >([]);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const errors = getRegistrationValidationErrors(form);
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setShowValidationModal(true);
+      scrollToRegistrationField(errors[0].fieldId);
+      return;
+    }
+
+    setValidationErrors([]);
+    setShowValidationModal(false);
+    void submit();
+  };
   const { data: provinces = [], isLoading: provincesLoading } = useProvinces();
   const { data: regencies = [], isLoading: regenciesLoading } = useRegencies(
     form.provinceId
@@ -93,21 +121,19 @@ export function RegistrationFormView() {
           </FadeIn>
 
           <FadeIn delay={100}>
-            <h2 className='text-3xl font-bold text-center text-rc-red'>
+            <h1 className='text-2xl font-bold text-center text-rc-red invisible hidden'>
               FURIFA 2026
-            </h2>
+            </h1>
+            <p className='text-center text-lg text-neutral-800 font-bold'>
+              Daftarkan diri Anda di FURIFA 2026.
+            </p>
           </FadeIn>
 
           <FadeIn delay={100}>
-            <form
-              className='flex flex-col gap-4'
-              onSubmit={(e) => {
-                e.preventDefault();
-                void submit();
-              }}>
+            <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
               <div className='rounded-md border border-neutral-200/90 bg-white p-5 shadow-sm sm:p-6'>
                 <div className='flex flex-col gap-5'>
-                  <div>
+                  <div id='field-fullName'>
                     <Label htmlFor='fullName' required>
                       Nama Lengkap
                     </Label>
@@ -115,14 +141,13 @@ export function RegistrationFormView() {
                       id='fullName'
                       name='fullName'
                       type='text'
-                      required
                       value={form.fullName}
                       onChange={(e) => setField('fullName', e.target.value)}
                       placeholder='Masukkan Nama Lengkap'
                     />
                   </div>
 
-                  <div>
+                  <div id='field-phone'>
                     <Label htmlFor='phone' required>
                       Nomor Telepon
                     </Label>
@@ -132,7 +157,6 @@ export function RegistrationFormView() {
                       type='tel'
                       inputMode='numeric'
                       autoComplete='tel'
-                      required
                       minLength={10}
                       maxLength={13}
                       value={form.phone}
@@ -152,7 +176,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-email'>
                     <Label htmlFor='email' required>
                       Email
                     </Label>
@@ -161,28 +185,25 @@ export function RegistrationFormView() {
                       name='email'
                       type='email'
                       autoComplete='email'
-                      required
                       value={form.email}
                       onChange={(e) => setField('email', e.target.value)}
                       placeholder='Masukkan Email (nama@gmail.com)'
                     />
                   </div>
 
-                  <div>
+                  <div id='field-dateOfBirth'>
                     <Label htmlFor='dateOfBirth' required>
                       Tanggal Lahir
                     </Label>
-                    <Input
+                    <BirthDatePicker
                       id='dateOfBirth'
                       name='dateOfBirth'
-                      type='date'
-                      required
                       value={form.dateOfBirth}
-                      onChange={(e) => setField('dateOfBirth', e.target.value)}
+                      onChange={(v) => setField('dateOfBirth', v)}
                     />
                   </div>
 
-                  <div>
+                  <div id='field-gender'>
                     <Label htmlFor='gender' required>
                       Jenis Kelamin
                     </Label>
@@ -198,7 +219,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-province'>
                     <Label htmlFor='province' required>
                       Provinsi
                     </Label>
@@ -233,7 +254,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-city'>
                     <Label htmlFor='city' required>
                       Kota / Kabupaten
                     </Label>
@@ -274,14 +295,13 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-fullAddress'>
                     <Label htmlFor='fullAddress' required>
                       Alamat Lengkap
                     </Label>
                     <Textarea
                       id='fullAddress'
                       name='fullAddress'
-                      required
                       value={form.fullAddress}
                       onChange={(e) => setField('fullAddress', e.target.value)}
                       placeholder='Masukkan Alamat Lengkap'
@@ -358,7 +378,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-petType'>
                     <Label htmlFor='petType' required>
                       Jenis Hewan Peliharaan
                     </Label>
@@ -374,7 +394,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-petGender'>
                     <Label htmlFor='petGender' required>
                       Gender Hewan Peliharaan
                     </Label>
@@ -390,7 +410,7 @@ export function RegistrationFormView() {
                     />
                   </div>
 
-                  <div>
+                  <div id='field-petName'>
                     <Label htmlFor='petName' required>
                       Nama Hewan Peliharaan
                     </Label>
@@ -398,14 +418,13 @@ export function RegistrationFormView() {
                       id='petName'
                       name='petName'
                       type='text'
-                      required
                       value={form.petName}
                       onChange={(e) => setField('petName', e.target.value)}
                       placeholder='Masukkan Nama Hewan Peliharaan'
                     />
                   </div>
 
-                  <div>
+                  <div id='field-petAgeYears'>
                     <Label htmlFor='petAgeYears' required>
                       Usia Hewan Peliharaan (Tahun)
                     </Label>
@@ -414,7 +433,6 @@ export function RegistrationFormView() {
                       name='petAgeYears'
                       type='text'
                       inputMode='numeric'
-                      required
                       value={form.petAgeYears}
                       onKeyDown={(e) => {
                         if (
@@ -437,7 +455,9 @@ export function RegistrationFormView() {
                 </div>
               </div>
 
-              <PrivacySection />
+              <div id='field-privacy'>
+                <PrivacySection />
+              </div>
 
               {submitError ? (
                 <p
@@ -472,6 +492,12 @@ export function RegistrationFormView() {
       </main>
 
       <RegistrationFooter />
+
+      <ValidationAlertModal
+        open={showValidationModal}
+        errors={validationErrors}
+        onClose={() => setShowValidationModal(false)}
+      />
     </div>
   );
 }
